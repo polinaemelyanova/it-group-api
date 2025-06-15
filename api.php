@@ -17,7 +17,7 @@ function getProductsByCategoryName($categoryName) {
     }
 
     // Теперь ищем товары с нужным type_product
-    $stmt = $pdo->prepare("SELECT * FROM components WHERE type_product = ?");
+    $stmt = $pdo->prepare("SELECT * FROM components WHERE type_product = ? ORDER BY id_components DESC");
     $stmt->execute([$type['id_type']]);
 
     return $stmt->fetchAll(PDO::FETCH_ASSOC);

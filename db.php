@@ -1,7 +1,7 @@
 <?php
 function getDatabaseConnection() {
     $host = 'localhost';
-    $db = 'itgroup';
+    $db = 'itgroup_normalized';
     $user = 'root';
     $pass = '';
     $charset = 'utf8mb4';
