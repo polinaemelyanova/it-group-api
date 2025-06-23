@@ -22,6 +22,7 @@ function getAllConfigurationsWithComponents() {
             ON configuration_components.id_configuration = configuration.id_configuration
         LEFT JOIN type_product
         	ON components.type_product = type_product.id_type
+        WHERE configuration.type_configuration != 0
         ORDER BY configuration.id_configuration DESC
     ");
 

@@ -28,15 +28,14 @@ try {
 
     // 1. Вставляем запись в configuration (итоговая цена приходит с фронта!)
     $stmt = $pdo->prepare(
-        "INSERT INTO configuration (name_configuration, price_configuration, type_configuration, specss)
-         VALUES (?, ?, ?, ?)"
+        "INSERT INTO configuration (name_configuration, price_configuration, type_configuration)
+         VALUES (?, ?, ?)"
     );
-    $specss = isset($data['specss']) ? json_encode($data['specss'], JSON_UNESCAPED_UNICODE) : null;
+
     $stmt->execute([
         $data['name_configuration'],
         $data['price_configuration'],
         $data['type_configuration'],
-        $specss
     ]);
     $config_id = $pdo->lastInsertId();
 

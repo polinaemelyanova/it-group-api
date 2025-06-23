@@ -8,7 +8,7 @@ function getConfigurationById($id) {
     $pdo = getDatabaseConnection(); // Получаем подключение к базе
 
     // SQL-запрос: выбрать товар с нужным id_component
-    $stmt = $pdo->prepare("SELECT configuration.id_configuration, configuration.name_configuration, 
+    $stmt = $pdo->prepare("SELECT configuration.id_configuration, configuration.name_configuration, configuration.type_configuration, 
     configuration.price_configuration, components.id_components, components.name_components, components.type_product, components.specs 
     FROM components RIGHT JOIN configuration_components ON components.id_components = configuration_components.id_component 
     LEFT JOIN configuration ON configuration_components.id_configuration = configuration.id_configuration 

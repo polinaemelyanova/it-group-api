@@ -19,8 +19,8 @@ try {
         INSERT INTO orders (
             city, street, house, flat,
             date_order, cost, payment_status,
-            comment, delivery_method, payment_method
-        ) VALUES (?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?)
+            comment, delivery_method, payment_method, status_order
+        ) VALUES (?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $data['order']['city'] ?? '',
@@ -28,10 +28,11 @@ try {
         $data['order']['house'] ?? null,
         $data['order']['flat'] ?? null,
         $data['order']['cost'] ?? 0,
-        'pending',
+        'ожидает оплаты',
         $data['order']['comment'] ?? '',
         $data['order']['delivery_method'] ?? '',
-        $data['order']['payment_method'] ?? ''
+        $data['order']['payment_method'] ?? '',
+        $data['order']['status_order'] ?? 1
     ]);
     $orderId = $pdo->lastInsertId();
 
@@ -49,39 +50,35 @@ try {
         $data['customer']['phone'] ?? '',
         $data['customer']['email'] ?? ''
     ]);
-    $customerId = $pdo->lastInsertId();
 
-    // 3. Добавляем товары
+    // 3. Добавляем товары с учетом количества
     foreach ($data['items'] as $item) {
         $idConfiguration = $item['id_configuration'] ?? null;
         $idComponent = $item['id_component'] ?? null;
         $quantity = $item['quantity'] ?? 1;
 
-        if ($idConfiguration && !$idComponent) {
-            // Это сборка — достаём все компоненты и их количество
+        if ($idConfiguration) {
+            // Это сборка - добавляем компоненты сборки с учетом количества
             $confStmt = $pdo->prepare("
-                SELECT id_component, quantity
-                FROM configuration_components
+                SELECT id_component, quantity as comp_quantity 
+                FROM configuration_components 
                 WHERE id_configuration = ?
             ");
             $confStmt->execute([$idConfiguration]);
             $components = $confStmt->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($components as $component) {
-                $componentId = $component['id_component'];
-                $componentQuantity = $component['quantity'] ?? 1;
-
-                // Умножаем на количество сборок, если заказано несколько
-                for ($i = 0; $i < $quantity * $componentQuantity; $i++) {
+                $totalQuantity = $component['comp_quantity'] * $quantity;
+                for ($i = 0; $i < $totalQuantity; $i++) {
                     $stmt = $pdo->prepare("
                         INSERT INTO order_items (id_order, id_component, id_configuration)
                         VALUES (?, ?, ?)
                     ");
-                    $stmt->execute([$orderId, $componentId, $idConfiguration]);
+                    $stmt->execute([$orderId, $component['id_component'], $idConfiguration]);
                 }
             }
-        } elseif ($idComponent) {
-            // Одиночный компонент
+        } else if ($idComponent) {
+            // Одиночный компонент - добавляем N раз
             for ($i = 0; $i < $quantity; $i++) {
                 $stmt = $pdo->prepare("
                     INSERT INTO order_items (id_order, id_component, id_configuration)
@@ -93,7 +90,7 @@ try {
     }
 
     $pdo->commit();
-    echo json_encode(["success" => true, "order_id" => $orderId, "customer_id" => $customerId]);
+    echo json_encode(["success" => true, "order_id" => $orderId]);
 
 } catch (Exception $e) {
     $pdo->rollBack();
